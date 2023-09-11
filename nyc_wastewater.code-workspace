@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "path": "model"
+    },
+    {
+      "path": "client"
+    },
+    {
+      "name": "nyc_wastewater",
+      "path": "."
+    }
+  ],
+  "settings": {}
+}
