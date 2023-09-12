@@ -32,12 +32,12 @@ const friendlyLabels: { [id: string]: string } = {
 }
 
 const colorsMap: { [id: string]: string } = {
-  "All Watersheds": "#FAFAFA",
-  Richmond: "#FAFAFA",
-  Queens: "#FAFAFA",
-  Kings: "#FAFAFA",
-  Bronx: "#FAFAFA",
-  "New York": "#FAFAFA",
+  "All Watersheds": "#20104d",
+  Richmond: "#70ff50",
+  Queens: "#507fff",
+  Kings: "#ff5050",
+  Bronx: "#bc50ff",
+  "New York": "#fff950",
 }
 
 const labels = Object.values(wastewaterData.test_date)
@@ -69,7 +69,7 @@ const data = {
 const LineChart = () => {
   return (
     <SquareContainer>
-      <div>
+      <div className="p-4">
         <Line
           data={data}
           options={{
@@ -193,12 +193,16 @@ const AtAGlance = () => {
 const FAQItems = [
   ["Wasterwater?", "<XYX why wastewater is a good source of covid data>"],
   [
-    "Why should I care about this?",
-    "You don’t have to! While everyone has different risks and considerations, we should all have access to simple, high quality, accurate information for decision making. That’s the goal of this page.",
-  ],
-  [
     "Where is this data from?",
     "All data on this website is publicly available – new wastewater data is from the CDC, and historical data is from NYC Open Data.",
+  ],
+  [
+    "So why does this site need to exist?",
+    "<Something about the CDC's illegible data>",
+  ],
+  [
+    "Why should I care about this?",
+    "You don’t have to! While everyone has different risks and considerations, we should all have access to simple, high quality, accurate information for decision making. That’s the goal of this page.",
   ],
   [
     "Why don’t the values match the NYS Wastewatcher dashboard?",
