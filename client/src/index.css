@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  h2 {
+    @apply text-4xl;
+    @apply uppercase;
+    @apply mb-5;
+  }
+  h3 {
+    @apply font-bold;
+  }
+  p {
+    @apply my-4;
+  }
+  a {
+    @apply underline;
+    @apply hover:opacity-50;
+  }
+  h4 {
+    color: #20104d;
+    color: #20104d;
+  }
+}
