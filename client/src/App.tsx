@@ -9,7 +9,7 @@ import {
   Legend,
 } from "chart.js"
 import { Line } from "react-chartjs-2"
-import wastewaterData from "../../model/output_json.json"
+import wastewaterData from "./assets/output_json.json"
 import { useEffect, useState } from "react"
 
 ChartJS.register(
