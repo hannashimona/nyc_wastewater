@@ -51,50 +51,30 @@ const colorsMap: Record<DataLabel, string> = {
   "New York": "#fff950",
 }
 
-const labels = Object.values(wastewaterData.test_date)
-const datasets = Object.entries(wastewaterData)
-  .filter(([k]) => k !== "test_date")
-  .map(([k, v]) => {
-    const label = friendlyLabels[k]
-    const data = Object.values(v)
-    const color = colorsMap[label]
-    return {
-      label,
-      borderColor: color,
-      backgroundColor: color,
-      pointStyle: false,
-      data,
-    }
-  })
-
-const data = {
-  labels,
-  datasets,
-  // datasets: [
-  //   {
-  //     label: "My First dataset",
-  //     backgroundColor: "rgb(255, 99, 132)",
-  //     borderColor: "rgb(255, 99, 132)",
-  //     data: [0, 10, 5, 2, 20, 30, 45],
-  //   },
-  // ],
-}
-
-const LineChart = () => {
+// TODO: type data
+const LineChart = ({ data }: { data: any | null }) => {
   const chartRef = useRef<ChartJS | null>(null)
   const [selectedData, setSelectedData] = useState<DataLabel>("All Watersheds")
+  const [hoverData, setHoverData] = useState<DataLabel | null>(null)
   console.log({ selectedData })
 
   useEffect(() => {
+    const selected = hoverData ?? selectedData
     chartRef.current?.data.datasets.forEach((dataset) => {
-      const isSelected = dataset.label !== selectedData
+      const isSelected = dataset.label !== selected
       const color = `${colorsMap[dataset.label!]}${isSelected ? "10" : ""}`
-      dataset.backgroundColor = color
+      // dataset.backgroundColor = color
       dataset.borderColor = color
     })
 
     chartRef.current?.update()
-  }, [selectedData])
+  }, [selectedData, hoverData])
+
+  // TODO: take out this loading delay
+  if (!data) {
+    return null
+  }
+
   return (
     <SquareContainer>
       <div className="p-4">
@@ -102,14 +82,29 @@ const LineChart = () => {
           ref={chartRef}
           data={data}
           options={{
+            animation: {
+              duration: 500,
+            },
             plugins: {
               legend: {
-                onHover: (evt, item, legend) => {
-                  console.log({ evt, item, legend })
+                // TODO: why doesn't this go back to normal when you leave?
+                onHover: (evt, item) => {
+                  // @ts-ignore
+                  evt.native.target.style.cursor = "pointer"
+                  console.log({ evt })
+                  const label = item.text as DataLabel
+                  setHoverData(label)
+                },
+                onLeave: (evt) => {
+                  console.log("ON LEAVE")
+                  // @ts-ignore
+                  evt.native.target.style.cursor = "cursor"
+                  setHoverData(null)
+                },
+                onClick: (_, item) => {
                   const label = item.text as DataLabel
                   setSelectedData(label)
                 },
-                onClick(e, legendItem, legend) {},
               },
             },
             scales: {
@@ -160,6 +155,7 @@ type CovidSummaryType = {
   percentile: number
   trend: "up" | "down"
   lastUpdated: Date
+  data: any // TODO: type this
 }
 
 const useCovidData = () => {
@@ -170,7 +166,43 @@ const useCovidData = () => {
     const fetcher = async () => {
       const data = await new Promise<CovidSummaryType>((res) => {
         setTimeout(() => {
-          res({ percentile: 75, trend: "up", lastUpdated: new Date() })
+          const labels = Object.values(wastewaterData.test_date)
+          const datasets = Object.entries(wastewaterData)
+            .filter(([k]) => k !== "test_date")
+            .map(([k, v]) => {
+              const label = friendlyLabels[k]
+              const data = Object.values(v)
+              const color = colorsMap[label]
+              return {
+                label,
+                borderColor: color,
+                backgroundColor: color,
+                pointStyle: false,
+                cubicInterpolationMode: "default",
+                tension: 0.01,
+                data,
+              }
+            })
+
+          const data = {
+            labels,
+            datasets,
+            // datasets: [
+            //   {
+            //     label: "My First dataset",
+            //     backgroundColor: "rgb(255, 99, 132)",
+            //     borderColor: "rgb(255, 99, 132)",
+            //     data: [0, 10, 5, 2, 20, 30, 45],
+            //   },
+            // ],
+          }
+
+          res({
+            percentile: 75,
+            trend: "up",
+            lastUpdated: new Date(),
+            data,
+          })
         })
       })
 
@@ -183,9 +215,7 @@ const useCovidData = () => {
   return summary
 }
 
-const AtAGlance = () => {
-  const summary = useCovidData()
-
+const AtAGlance = ({ summary }: { summary: CovidSummaryType | null }) => {
   // TODO: is there a more tailwindy way to do this?
   // TODO: need to wire this up. Classnames?
   // const percentileColor = summary?.percentile
@@ -269,10 +299,12 @@ const SideBar = () => {
 }
 
 const MainContent = () => {
+  const summary = useCovidData()
+
   return (
     <div className="max-w-4xl flex flex-col gap-16 mx-20">
-      <AtAGlance />
-      <LineChart />
+      <AtAGlance summary={summary} />
+      <LineChart data={summary?.data} />
       <div>
         <h2>Suggestions</h2>
         <p>Based on this data, here are some ideas to reduce your risk:</p>
