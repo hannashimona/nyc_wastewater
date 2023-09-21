@@ -11,7 +11,7 @@ import {
 } from "chart.js"
 import { Line } from "react-chartjs-2"
 import wastewaterData from "./assets/output_json.json"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import "chartjs-adapter-luxon"
 
 ChartJS.register(
@@ -25,7 +25,15 @@ ChartJS.register(
   TimeScale,
 )
 
-const friendlyLabels: { [id: string]: string } = {
+type DataLabel =
+  | "All Watersheds"
+  | "Richmond"
+  | "Queens"
+  | "Kings"
+  | "Bronx"
+  | "New York"
+
+const friendlyLabels: { [id: string]: DataLabel } = {
   NYC_percentile: "All Watersheds",
   Richmond_w_percentile: "Richmond",
   Queens_w_percentile: "Queens",
@@ -34,7 +42,7 @@ const friendlyLabels: { [id: string]: string } = {
   "New York_w_percentile": "New York",
 }
 
-const colorsMap: { [id: string]: string } = {
+const colorsMap: Record<DataLabel, string> = {
   "All Watersheds": "#20104d",
   Richmond: "#70ff50",
   Queens: "#507fff",
@@ -49,9 +57,12 @@ const datasets = Object.entries(wastewaterData)
   .map(([k, v]) => {
     const label = friendlyLabels[k]
     const data = Object.values(v)
+    const color = colorsMap[label]
     return {
       label,
-      borderColor: colorsMap[label],
+      borderColor: color,
+      backgroundColor: color,
+      pointStyle: false,
       data,
     }
   })
@@ -70,12 +81,37 @@ const data = {
 }
 
 const LineChart = () => {
+  const chartRef = useRef<ChartJS | null>(null)
+  const [selectedData, setSelectedData] = useState<DataLabel>("All Watersheds")
+  console.log({ selectedData })
+
+  useEffect(() => {
+    chartRef.current?.data.datasets.forEach((dataset) => {
+      const isSelected = dataset.label !== selectedData
+      const color = `${colorsMap[dataset.label!]}${isSelected ? "10" : ""}`
+      dataset.backgroundColor = color
+      dataset.borderColor = color
+    })
+
+    chartRef.current?.update()
+  }, [selectedData])
   return (
     <SquareContainer>
       <div className="p-4">
         <Line
+          ref={chartRef}
           data={data}
           options={{
+            plugins: {
+              legend: {
+                onHover: (evt, item, legend) => {
+                  console.log({ evt, item, legend })
+                  const label = item.text as DataLabel
+                  setSelectedData(label)
+                },
+                onClick(e, legendItem, legend) {},
+              },
+            },
             scales: {
               y: {
                 min: 0,
