@@ -198,14 +198,18 @@ const AtAGlance = () => {
 }
 
 const FAQItems = [
-  ["Wasterwater?", "Wastewater testing measures the amount of coronavirus shed in stool, when people go to the bathroom. Now that most cities aren't collecting COVID test results, wastewater is the most reliable source for measuring the number of people in a region who currently have COVID. This [photo essay](https://www.nytimes.com/interactive/2022/08/17/health/wastewater-polio-covid-nyc.html) shows the testing process in an NYC Hospital. "],
+  [
+    "Wasterwater?",
+    "Wastewater testing measures the amount of coronavirus shed in stool, when people go to the bathroom. Now that most cities aren't collecting COVID test results, wastewater is the most reliable source for measuring the number of people in a region who currently have COVID. This [photo essay](https://www.nytimes.com/interactive/2022/08/17/health/wastewater-polio-covid-nyc.html) shows the testing process in an NYC Hospital. ",
+  ],
   [
     "Where is this data from?",
     "All data on this website is publicly available – new wastewater data is from the [CDC](https://covid.cdc.gov/covid-data-tracker/#wastewater-surveillance), and historical data is from [NYC Open Data](https://data.cityofnewyork.us/Health/SARS-CoV-2-concentrations-measured-in-NYC-Wastewat/f7dc-2q9f/data).",
   ],
-  [ "Why not just look at the CDC Website?",
-   "We are technical professionals, who had trouble getting a line graph out of the CDC website. If they make it easier, we will shut down this site."
-   ],
+  [
+    "Why not just look at the CDC Website?",
+    "We are technical professionals, who had trouble getting a line graph out of the CDC website. If they make it easier, we will shut down this site.",
+  ],
   [
     "Why should I care about this?",
     "You don’t have to! While everyone has different risks and considerations, we should all have access to simple, high quality, accurate information for decision making. That’s the goal of this page.",
