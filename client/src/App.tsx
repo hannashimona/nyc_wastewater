@@ -26,29 +26,29 @@ ChartJS.register(
 )
 
 type DataLabel =
-  | "All Watersheds"
+  | "All NYC"
   | "Richmond"
   | "Queens"
   | "Kings"
   | "Bronx"
-  | "New York"
+  | "Manhattan"
 
 const friendlyLabels: { [id: string]: DataLabel } = {
-  NYC_percentile: "All Watersheds",
+  NYC_percentile: "All NYC",
   Richmond_w_percentile: "Richmond",
   Queens_w_percentile: "Queens",
   Kings_w_percentile: "Kings",
   Bronx_w_percentile: "Bronx",
-  "New York_w_percentile": "New York",
+  "New York_w_percentile": "Manhattan",
 }
 
 const colorsMap: Record<DataLabel, string> = {
-  "All Watersheds": "#20104d",
+  "All NYC": "#20104d",
   Richmond: "#70ff50",
   Queens: "#507fff",
   Kings: "#ff5050",
   Bronx: "#bc50ff",
-  "New York": "#fff950",
+  Manhattan: "#fff950",
 }
 
 // TODO: type data
