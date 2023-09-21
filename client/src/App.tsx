@@ -7,10 +7,12 @@ import {
   Title,
   Tooltip,
   Legend,
+  TimeScale,
 } from "chart.js"
 import { Line } from "react-chartjs-2"
 import wastewaterData from "./assets/output_json.json"
 import { useEffect, useState } from "react"
+import "chartjs-adapter-luxon"
 
 ChartJS.register(
   CategoryScale,
@@ -20,6 +22,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
+  TimeScale,
 )
 
 const friendlyLabels: { [id: string]: string } = {
@@ -79,6 +82,10 @@ const LineChart = () => {
                 max: 100,
               },
               x: {
+                type: "time",
+                time: {
+                  unit: "month",
+                },
                 grid: {
                   display: false,
                 },
@@ -145,11 +152,11 @@ const AtAGlance = () => {
 
   // TODO: is there a more tailwindy way to do this?
   // TODO: need to wire this up. Classnames?
-  const percentileColor = summary?.percentile
-    ? summary.percentile > 60
-      ? "text-rose-600"
-      : "text-green-400"
-    : ""
+  // const percentileColor = summary?.percentile
+  //   ? summary.percentile > 60
+  //     ? "text-rose-600"
+  //     : "text-green-400"
+  //   : ""
 
   return (
     <div>
@@ -237,8 +244,8 @@ const MainContent = () => {
       </div>
       <div id="FAQ">
         <h2>FAQ</h2>
-        {FAQItems.map(([q, a]) => (
-          <p>
+        {FAQItems.map(([q, a], i) => (
+          <p key={i}>
             <h3>{q}</h3>
             {a}
           </p>
