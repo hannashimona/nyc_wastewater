@@ -12,6 +12,7 @@ import {
 import { Line } from "react-chartjs-2"
 import { useEffect, useRef, useState } from "react"
 import "chartjs-adapter-luxon"
+import { DateTime } from "luxon"
 
 ChartJS.register(
   CategoryScale,
@@ -207,38 +208,40 @@ const createGraphData = (data: BackendResponse) => {
 type CovidSummaryType = {
   percentile: number
   trend: "up" | "down"
-  lastUpdated: Date
+  lastUpdated: DateTime
   data: ReturnType<typeof createGraphData>
 }
 
 const createCovidSummary = async (): Promise<CovidSummaryType> => {
   const wastewaterData = await fetchCovidData()
   const graphData = createGraphData(wastewaterData)
+  const nycPercentile = wastewaterData["NYC_percentile"]
   console.log({ wastewaterData })
   // TODO: fix this shitty typing
 
   // Get percentile
-  const mostRecentValuedDay = Object.keys(wastewaterData["NYC_percentile"])
+  const mostRecentValuedDay = Object.keys(nycPercentile)
     .sort((a, b) => Number(b) - Number(a))
-    .find(
-      (k) => wastewaterData["NYC_percentile"][Number(k)] != null,
-    ) as unknown as number
+    .find((k) => nycPercentile[Number(k)] != null) as unknown as number
 
-  const percentile = wastewaterData["NYC_percentile"][
-    mostRecentValuedDay
-  ] as number
+  const percentile = nycPercentile[mostRecentValuedDay] as number
+
+  // Get last updated
+
+  const lastUpdated = DateTime.fromISO(
+    wastewaterData["test_date"][mostRecentValuedDay],
+  )
 
   // Get trend (TODO: do this from backend w a regression probs)
+  // Super hacky and doesn't deal with if that day doesn't have a value, yikes
+  const twoWeeksAgoVal = nycPercentile[mostRecentValuedDay - 14] as number
 
-  const day = wastewaterData["test_date"][mostRecentValuedDay]
-  console.log({ day })
-  const lastUpdated = new Date(wastewaterData["test_date"][mostRecentValuedDay])
-  console.log({ mostRecentValuedDay })
-  console.log({ lastUpdated })
+  // TODO: we should have a 'flat' trend here
+  const trend = twoWeeksAgoVal < percentile ? "up" : "down"
 
   return {
     percentile, // TODO: fix this type
-    trend: "up" as const, // TODO
+    trend,
     lastUpdated: lastUpdated, // TODO
     data: graphData,
   }
@@ -275,20 +278,18 @@ const AtAGlance = ({ summary }: { summary: CovidSummaryType | null }) => {
           <div className="p-12">
             <ul>
               <li>
-                – Covid Percentile:{" "}
+                – The current Covid Percentile is{" "}
+                <span className="text-rose-600">
+                  {summary.percentile.toFixed(1)} out of 100.{" "}
+                </span>
                 <a className="text-gray-400 hover:underline" href="#">
                   (what's this?)
                 </a>
-                :{" "}
-                <span className="text-rose-600">
-                  {summary.percentile.toFixed(1)} out of 100
-                </span>
-                .
               </li>
               <li>
-                – Covid rates over the last two weeks:{" "}
+                – Covid rates over the last two weeks are trending{" "}
                 <span className="text-rose-600">
-                  {summary.trend === "up" ? "trending up" : "trending down"}.
+                  {summary.trend === "up" ? "up" : "down"}.
                 </span>
               </li>
             </ul>
@@ -298,10 +299,7 @@ const AtAGlance = ({ summary }: { summary: CovidSummaryType | null }) => {
         )}
         {summary ? (
           <div className="absolute right-4 bottom-4 text-black/30">
-            Last updated:{" "}
-            {summary?.lastUpdated.toLocaleDateString("en-US", {
-              timeZone: "UTC",
-            })}
+            Last updated: {summary?.lastUpdated.toISODate()}
           </div>
         ) : null}
       </SquareContainer>
