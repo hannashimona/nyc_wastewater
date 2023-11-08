@@ -10,7 +10,6 @@ import {
   TimeScale,
 } from "chart.js"
 import { Line } from "react-chartjs-2"
-import wastewaterData from "./assets/output_json.json"
 import { useEffect, useRef, useState } from "react"
 import "chartjs-adapter-luxon"
 
@@ -25,6 +24,8 @@ ChartJS.register(
   TimeScale,
 )
 
+// TODO: can lose / infer this
+
 type DataLabel =
   | "All NYC"
   | "Richmond"
@@ -33,14 +34,17 @@ type DataLabel =
   | "Bronx"
   | "Manhattan"
 
-const friendlyLabels: { [id: string]: DataLabel } = {
+// TODO: do I have nyc_percentile and New York w percentile flipped?
+const labelsMap = {
   NYC_percentile: "All NYC",
   Richmond_w_percentile: "Richmond",
   Queens_w_percentile: "Queens",
   Kings_w_percentile: "Kings",
   Bronx_w_percentile: "Bronx",
   "New York_w_percentile": "Manhattan",
-}
+} as const
+
+type Watersheds = keyof typeof labelsMap
 
 const colorsMap: Record<DataLabel, string> = {
   "All NYC": "#20104d",
@@ -152,7 +156,7 @@ const Header = () => {
 }
 
 type BackendResponse = {
-  [K in DataLabel]: { [id: number]: number | null }
+  [K in Watersheds]: { [id: number]: number | null }
 } & {
   test_date: {
     [id: number]: string
@@ -167,11 +171,11 @@ const fetchCovidData = async () => {
 }
 
 const createGraphData = (data: BackendResponse) => {
-  const labels = Object.values(wastewaterData.test_date)
-  const datasets = Object.entries(wastewaterData)
+  const labels = Object.values(data.test_date)
+  const datasets = Object.entries(data)
     .filter(([k]) => k !== "test_date")
     .map(([k, v]) => {
-      const label = friendlyLabels[k]
+      const label = labelsMap[k]
       const data = Object.values(v)
       const color = colorsMap[label]
       return {
@@ -210,10 +214,32 @@ type CovidSummaryType = {
 const createCovidSummary = async (): Promise<CovidSummaryType> => {
   const wastewaterData = await fetchCovidData()
   const graphData = createGraphData(wastewaterData)
+  console.log({ wastewaterData })
+  // TODO: fix this shitty typing
+
+  // Get percentile
+  const mostRecentValuedDay = Object.keys(wastewaterData["NYC_percentile"])
+    .sort((a, b) => Number(b) - Number(a))
+    .find(
+      (k) => wastewaterData["NYC_percentile"][Number(k)] != null,
+    ) as unknown as number
+
+  const percentile = wastewaterData["NYC_percentile"][
+    mostRecentValuedDay
+  ] as number
+
+  // Get trend (TODO: do this from backend w a regression probs)
+
+  const day = wastewaterData["test_date"][mostRecentValuedDay]
+  console.log({ day })
+  const lastUpdated = new Date(wastewaterData["test_date"][mostRecentValuedDay])
+  console.log({ mostRecentValuedDay })
+  console.log({ lastUpdated })
+
   return {
-    percentile: 75, // TODO
+    percentile, // TODO: fix this type
     trend: "up" as const, // TODO
-    lastUpdated: new Date(), // TODO
+    lastUpdated: lastUpdated, // TODO
     data: graphData,
   }
 }
@@ -255,7 +281,7 @@ const AtAGlance = ({ summary }: { summary: CovidSummaryType | null }) => {
                 </a>
                 :{" "}
                 <span className="text-rose-600">
-                  {summary.percentile} out of 100
+                  {summary.percentile.toFixed(1)} out of 100
                 </span>
                 .
               </li>
@@ -272,7 +298,10 @@ const AtAGlance = ({ summary }: { summary: CovidSummaryType | null }) => {
         )}
         {summary ? (
           <div className="absolute right-4 bottom-4 text-black/30">
-            Data last updated: {summary?.lastUpdated.toDateString()}
+            Last updated:{" "}
+            {summary?.lastUpdated.toLocaleDateString("en-US", {
+              timeZone: "UTC",
+            })}
           </div>
         ) : null}
       </SquareContainer>
