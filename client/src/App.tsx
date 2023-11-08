@@ -151,65 +151,82 @@ const Header = () => {
   )
 }
 
+type BackendResponse = {
+  [K in DataLabel]: { [id: number]: number | null }
+} & {
+  test_date: {
+    [id: number]: string
+  }
+}
+
+const OUTPUT_URL = "https://dzxpc6d4t7c55.cloudfront.net/output.json"
+const fetchCovidData = async () => {
+  const res = await fetch(OUTPUT_URL)
+  const wastewaterData: BackendResponse = await res.json()
+  return wastewaterData
+}
+
+const createGraphData = (data: BackendResponse) => {
+  const labels = Object.values(wastewaterData.test_date)
+  const datasets = Object.entries(wastewaterData)
+    .filter(([k]) => k !== "test_date")
+    .map(([k, v]) => {
+      const label = friendlyLabels[k]
+      const data = Object.values(v)
+      const color = colorsMap[label]
+      return {
+        label,
+        borderColor: color,
+        backgroundColor: color,
+        pointStyle: false,
+        cubicInterpolationMode: "default",
+        tension: 0.01,
+        data,
+      }
+    })
+
+  return {
+    labels,
+    // Looks like:
+    // datasets: [
+    //   {
+    //     label: "My First dataset",
+    //     backgroundColor: "rgb(255, 99, 132)",
+    //     borderColor: "rgb(255, 99, 132)",
+    //     data: [0, 10, 5, 2, 20, 30, 45],
+    //   },
+    // ],
+    datasets,
+  }
+}
+
 type CovidSummaryType = {
   percentile: number
   trend: "up" | "down"
   lastUpdated: Date
-  data: any // TODO: type this
+  data: ReturnType<typeof createGraphData>
+}
+
+const createCovidSummary = async (): Promise<CovidSummaryType> => {
+  const wastewaterData = await fetchCovidData()
+  const graphData = createGraphData(wastewaterData)
+  return {
+    percentile: 75, // TODO
+    trend: "up" as const, // TODO
+    lastUpdated: new Date(), // TODO
+    data: graphData,
+  }
 }
 
 const useCovidData = () => {
   const [summary, setSummary] = useState<CovidSummaryType | null>(null)
 
   useEffect(() => {
-    // TODO: fetch data here / ssr
-    const fetcher = async () => {
-      const data = await new Promise<CovidSummaryType>((res) => {
-        setTimeout(() => {
-          const labels = Object.values(wastewaterData.test_date)
-          const datasets = Object.entries(wastewaterData)
-            .filter(([k]) => k !== "test_date")
-            .map(([k, v]) => {
-              const label = friendlyLabels[k]
-              const data = Object.values(v)
-              const color = colorsMap[label]
-              return {
-                label,
-                borderColor: color,
-                backgroundColor: color,
-                pointStyle: false,
-                cubicInterpolationMode: "default",
-                tension: 0.01,
-                data,
-              }
-            })
-
-          const data = {
-            labels,
-            datasets,
-            // datasets: [
-            //   {
-            //     label: "My First dataset",
-            //     backgroundColor: "rgb(255, 99, 132)",
-            //     borderColor: "rgb(255, 99, 132)",
-            //     data: [0, 10, 5, 2, 20, 30, 45],
-            //   },
-            // ],
-          }
-
-          res({
-            percentile: 75,
-            trend: "up",
-            lastUpdated: new Date(),
-            data,
-          })
-        })
-      })
-
-      setSummary(data)
+    const task = async () => {
+      const summary = await createCovidSummary()
+      setSummary(summary)
     }
-
-    fetcher()
+    task()
   }, [])
 
   return summary
